@@ -1,3 +1,5 @@
+""""Setup file."""
+
 import setuptools
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -5,10 +7,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="bucket_adapter",
-    version="0.3.2",
+    version="0.3.11rc1",
     author="Gohar Younas Malik",
     author_email="goharyounas@gmail.com",
-    description="A generic adapter for gcp bucket/aws s3 bucket services to upload/downlaod files on bucket.",
+    description="A generic adapter for gcp/aws services to upload/download files on bucket.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/goharyounas/buckets_adapter",

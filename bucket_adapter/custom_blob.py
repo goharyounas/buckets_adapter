@@ -24,7 +24,7 @@ class CustomBlob(object):
         self.content_language = None
         self.size = None
         print("TYPE:", type(blob), "is equal", )
-        if type(blob) == Blob:
+        if str(type(blob)) == "<class 'google.cloud.storage.blob.Blob'>":
             self._generic_gcp_blob(blob, options)
         # Quick Hack because amazon uses generic factory functions to create
         # resource objects.

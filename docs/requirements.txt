@@ -1,3 +1,4 @@
-Django
-Google Cloud
-Boto3
+Django==3.0.8
+import_string
+google-cloud
+boto3

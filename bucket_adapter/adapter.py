@@ -29,7 +29,8 @@ class Adapter(object):
         Returns:
             [string]: [returns the url afer uploading the file to bucket]
         """
-        return self.adaptee_obj.upload(*args, **kwargs, options=self.settings, client=self.authenticate)
+        return self.adaptee_obj.upload(
+            *args, **kwargs, options=self.settings, client=self.authenticate)
 
     def download(self, *args, **kwargs):
         """download.
@@ -70,3 +71,11 @@ class Adapter(object):
             [type]: [returns the file pointer]
         """
         return self.adaptee_obj.download_to_file_pointer(*args, **kwargs, options=self.settings, client=self.authenticate)
+    
+    def get_head_object(self, *args, **kwargs):
+        """get_head_object.
+
+        Returns:
+            [type]: [returns the head object]
+        """
+        return self.adaptee_obj.get_head_object(*args, **kwargs, options=self.settings, client=self.authenticate)

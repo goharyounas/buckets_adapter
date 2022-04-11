@@ -1,8 +1,11 @@
-"""GCP class file"""
+"""GCP class file."""
 
+import datetime
+import json
+import logging
 import os
 
-from google.cloud import storage
+from google.cloud import exceptions, storage
 from google.oauth2 import service_account
 from google.oauth2.service_account import Credentials
 
@@ -22,7 +25,7 @@ class GCP(object):
     REQUIRED_FIELDS = ['CREDENTIAL_FILE', 'PROJECT_NAME', 'BUCKET_NAME']
 
     def authenticate(self, options):
-        """[authenticate function to authenticate the service (aws s3/gcp bucket)]
+        """[authenticate function to authenticate the service (aws s3/gcp bucket)].
 
         Args:
             options ([dict]): [options dict contains all the configuration settings]
@@ -31,16 +34,27 @@ class GCP(object):
             [object]: [a client object when authentication is successful else exception is raised]
         """
         try:
-            credentials = service_account.Credentials.from_service_account_file(
-                options['CREDENTIAL_FILE'])
-            client = storage.Client(
-                credentials=credentials, project=options['PROJECT_NAME'])
-            return client
+            credentials = None
+            if 'CREDENTIAL_JSON' in options and options['CREDENTIAL_JSON']:
+                credentials = service_account.Credentials.from_service_account_info(
+                    json.loads(options['CREDENTIAL_JSON']))
+            else:
+                credentials = service_account.Credentials.from_service_account_file(
+                    options['CREDENTIAL_FILE'])
+            if credentials:
+                client = storage.Client(
+                    credentials=credentials, project=options['PROJECT_NAME'])
+            else:
+                raise exceptions.Forbidden('Authentication Failed')
+            if client:
+                return client
+            else:
+                raise exceptions.GoogleCloudError('Authentication Failed')
         except Exception as E:
-            print("Exception",E)
+            logging.exception("Exception {err}".format())
             raise Exception('Authentication Failed')
 
-    def upload(self, filename, options, client, bucket_filename=None):
+    def upload(self, filename, options, client, bucket_filename=None, ExtraArgs=None):
         """upload function to uplaod the file to gcp bucket.
 
         Args:
@@ -58,10 +72,10 @@ class GCP(object):
             blob.upload_from_filename(filename)
             return True, blob.public_url
         except Exception as E:
-            print("Exception", E)
+            logging.error("Exception {err}".format(err=str(E)))
 
     def download(self, filename, options, client):
-        """[download function to download the file in your working directory]
+        """[download function to download the file in your working directory].
 
         Args:
             filename ([string]): [file to be download]
@@ -72,11 +86,13 @@ class GCP(object):
             [file]: [file is being downloaded in the working directory]
         """
         bucket = client.get_bucket(options['BUCKET_NAME'])
-        blob = bucket.get_blob(file_name)
+        blob = bucket.get_blob(filename)
+        # FIXME: storage_name not defined?
         return blob.download_to_filename(storage_name)
 
     def generate_signed_url(self, filename, options, client):
-        """Generates a v2 signed URL for downloading a blob.
+        """Generate a v2 signed URL for downloading a blob.
+
         Note that this method requires a service account key file. You can not use
         this if you are using Application Default Credentials from Google Compute
         Engine or from the Google Cloud SDK.
@@ -98,7 +114,7 @@ class GCP(object):
         return url
 
     def get_blob(self, filename, options, client):
-        """[get custom blob object]
+        """[get custom blob object].
 
         Args:
             filename ([string]): [filename]
@@ -114,7 +130,7 @@ class GCP(object):
         return blob
 
     def generate_signed_url_with_custom_expiry(self, filename, client, expiration, options):
-        """[generate_signed_url_with_custom_expiry by passing the file expiry time as well]
+        """[generate_signed_url_with_custom_expiry by passing the file expiry time as well].
 
         Args:
             filename ([string]): [file to be ]
@@ -144,8 +160,18 @@ class GCP(object):
         Returns:
             [type]: [temporary file pointer object]
         """
-
         bucket = client.get_bucket(options['BUCKET_NAME'])
         blob = bucket.get_blob(filename)
         response = client.download_blob_to_file(blob, tempfile_name)
         return response
+
+    def get_head_object(self, Key, options, client):
+        """get head_object of GCP cloud storage object.
+
+        Args:
+            Key ([string]): [file name]
+            options ([dict]): [description]
+            client ([dict]): [description]
+        """
+        # FIXME
+        raise NotImplementedError('Not Implemented on GCP')
